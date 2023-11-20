@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithms Project</title>
+    <style type="text/css">
+      body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        canvas {
+            border: 2px solid #ccc;
+            cursor: crosshair;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            background-color: #3498db;
+            color: #fff;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+    </style>
+  <script type="text/javascript" src="./dist/paper-full.js"></script>
+</head>
+<body>
+  <div id = "buttons">
+    <button id="quick">Quick Elimination</button>
+        <button id="random">Generate Random</button>
+    <button id="clear">Clear Canvas</button>
+  </div>
+    <canvas id="myCanvas" resize></canvas>
+    <script src="quickHull.js"></script>
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line Drawer with Intersection Check</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        canvas {
+            border: 2px solid #ccc;
+            cursor: crosshair;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            background-color: #3498db;
+            color: #fff;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        p {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        #intersectionResult {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 18px;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+            display: none;
+        }
+
+        #orientationResults {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 18px;
+            border: 2px solid #f39c12;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="myCanvas" width="800" height="600" onclick="drawLine(event)"></canvas>
+<div class="container" style="flex-direction: row-reverse; margin-top: 10px;">
+    <button onclick="checkIntersection()">Check Intersection</button>
+    <button onclick="checkIntersectionCrossProduct()">Check Intersection Cross Product</button>
+    <button onclick="checkIntersectionParametric()">Check Intersection Parametric Approach</button>
+    <button onclick="clearCanvas()">Clear Canvas</button>
+</div>
+
+<div id="intersectionResult"></div>
+<div id="orientationResults"></div>
+<p id="coordinates"></p>
+
+<script>
+    var canvas = document.getElementById('myCanvas');
+    var ctx = canvas.getContext('2d');
+    var Points = [];
+    var Points1 = [];
+    var linesDrawn = 0;
+
+    // Class to represent a point in 2D space
+    class Point {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    function orientation(p, q, r) {
+        let val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+        if (val == 0) return 0; // collinear
+        return (val > 0) ? 1 : 2; // clock or counterclockwise
+    }
+
+    function onSegment(p, q, r) {
+        return (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
+                q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y));
+    }
+
+    // Function to check if two line segments intersect
+    function doIntersect(p1, q1, p2, q2) {
+        let o1 = orientation(p1, q1, p2);
+        let o2 = orientation(p1, q1, q2);
+        let o3 = orientation(p2, q2, p1);
+        let o4 = orientation(p2, q2, q1);
+
+        // Display orientation results
+        displayOrientationResults(`Orientation Results:<br>
+            o1 = ${o1}, o2 = ${o2}, o3 = ${o3}, o4 = ${o4}`);
+
+        if ((o1 != o2 && o3 != o4) ||
+            (o1 == 0 && onSegment(p1, p2, q1)) ||
+            (o2 == 0 && onSegment(p1, q2, q1)) ||
+            (o3 == 0 && onSegment(p2, p1, q2)) ||
+            (o4 == 0 && onSegment(p2, q1, q2))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function doIntersectCrossProduct(p1, q1, p2, q2) {
+        function crossProduct(v1, v2) {
+            return v1.x * v2.y - v1.y * v2.x;
+        }
+
+        function onSegment(p, q, r) {
+            return (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
+                    q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y));
+        }
+
+        let v1 = { x: q1.x - p1.x, y: q1.y - p1.y };
+        let v2 = { x: p2.x - p1.x, y: p2.y - p1.y };
+        let v3 = { x: q2.x - p1.x, y: q2.y - p1.y };
+        
+        let cross1 = crossProduct(v1, v2);
+        let cross2 = crossProduct(v1, v3);
+
+        // Display cross product results
+        displayOrientationResults(`Cross Product Results:<br>
+            Cross Product 1 = ${cross1}, Cross Product 2 = ${cross2}`);
+
+        // Check if cross products have opposite signs or both are zero
+        if ((cross1 > 0 && cross2 < 0) || (cross1 < 0 && cross2 > 0) || (cross1 === 0 && cross2 === 0)) {
+            return true;
+        }
+
+        // Check if the points are collinear and on the same segment
+        if (cross1 === 0 && onSegment(p1, q1, p2)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function doIntersectParametric(p1, q1, p2, q2) {
+        function onSegment(p, q, r) {
+            return (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
+                    q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y));
+        }
+
+        function computeIntersection(p1, q1, p2, q2) {
+            let A1 = q1.y - p1.y;
+            let B1 = p1.x - q1.x;
+            let C1 = A1 * p1.x + B1 * p1.y;
+
+            let A2 = q2.y - p2.y;
+            let B2 = p2.x - q2.x;
+            let C2 = A2 * p2.x + B2 * p2.y;
+
+            let det = A1 * B2 - A2 * B1;
+
+            if (det === 0) {
+                return null; // Lines are parallel
+            }
+
+            let x = (B2 * C1 - B1 * C2) / det;
+            let y = (A1 * C2 - A2 * C1) / det;
+
+            // Check if the intersection point is within the line segments
+            if (x >= Math.min(p1.x, q1.x) && x <= Math.max(p1.x, q1.x) &&
+                y >= Math.min(p1.y, q1.y) && y <= Math.max(p1.y, q1.y) &&
+                x >= Math.min(p2.x, q2.x) && x <= Math.max(p2.x, q2.x) &&
+                y >= Math.min(p2.y, q2.y) && y <= Math.max(p2.y, q2.y)) {
+                return { x, y };
+            }
+
+            return null;
+        }
+
+        let intersectionPoint = computeIntersection(p1, q1, p2, q2);
+
+        // Display parametric approach results
+        if (intersectionPoint) {
+            displayOrientationResults(`Parametric Approach Results:<br>
+                Intersection Detected!<br>
+                Intersection Point: (${intersectionPoint.x}, ${intersectionPoint.y})`);
+            return true;
+        }
+
+        return false;
+    }
+
+    function drawLine(event) {
+        var x = event.clientX - canvas.getBoundingClientRect().left;
+        var y = event.clientY - canvas.getBoundingClientRect().top;
+
+        Points.push(new Point(x, y));
+        Points1.push(new Point(x, y));
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+
+        if (Points.length === 2) {
+            drawSegment();
+            Points = [];
+        }
+    }
+
+    function drawSegment() {
+        var x1 = Points[0].x;
+        var y1 = Points[0].y;
+        var x2 = Points[1].x;
+        var y2 = Points[1].y;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = '#3498db';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        linesDrawn++;
+
+        var coordinatesText = `Line ${linesDrawn} Coordinates: (${x1}, ${y1}) - (${x2}, ${y2})`;
+        var coordinatesElement = document.getElementById('coordinates');
+        coordinatesElement.innerHTML += coordinatesText + '<br>';
+    }
+
+    function displayOrientationResults(results) {
+        var orientationResultsElement = document.getElementById('orientationResults');
+        orientationResultsElement.innerHTML = results;
+        orientationResultsElement.style.display = 'block';
+    }
+
+    function checkIntersection() {
+        if (linesDrawn >= 2) {
+            var resultElement = document.getElementById('intersectionResult');
+            if (doIntersect(Points1[0], Points1[1], Points1[2], Points1[3])) {
+                resultElement.innerHTML = 'Intersection Detected!';
+                resultElement.style.color = '#27ae60'; // Green
+            } else {
+                resultElement.innerHTML = 'No intersection detected!';
+                resultElement.style.color = '#e74c3c'; // Red
+            }
+            resultElement.style.display = 'block';
+        }
+    }
+
+    function checkIntersectionCrossProduct() {
+        if (linesDrawn >= 2) {
+            var resultElement = document.getElementById('intersectionResult');
+            if (doIntersectCrossProduct(Points1[0], Points1[1], Points1[2], Points1[3])) {
+                resultElement.innerHTML = 'Intersection Detected!';
+                resultElement.style.color = '#27ae60'; // Green
+            } else {
+                resultElement.innerHTML = 'No intersection detected!';
+                resultElement.style.color = '#e74c3c'; // Red
+            }
+            resultElement.style.display = 'block';
+        }
+    }
+
+    function checkIntersectionParametric() {
+        if (linesDrawn >= 2) {
+            var resultElement = document.getElementById('intersectionResult');
+            if (doIntersectParametric(Points1[0], Points1[1], Points1[2], Points1[3])) {
+                resultElement.innerHTML = 'Intersection Detected!';
+                resultElement.style.color = '#27ae60'; // Green
+            } else {
+                resultElement.innerHTML = 'No intersection detected!';
+                resultElement.style.color = '#e74c3c'; // Red
+            }
+            resultElement.style.display = 'block';
+        }
+    }
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        Points = [];
+        Points1 = [];
+        linesDrawn = 0;
+        var coordinatesElement = document.getElementById('coordinates');
+        coordinatesElement.innerHTML = '';
+        var resultElement = document.getElementById('intersectionResult');
+        resultElement.style.display = 'none';
+        var orientationResultsElement = document.getElementById('orientationResults');
+        orientationResultsElement.style.display = 'none';
+    }
+</script>
+
+</body>
+</html>

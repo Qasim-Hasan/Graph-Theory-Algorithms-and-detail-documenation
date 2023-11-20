@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convex Hull Visualization</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        canvas {
+            border: 2px solid #ccc;
+            cursor: crosshair;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            background-color: #3498db;
+            color: #fff;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        #steps {
+            position: absolute;
+            margin-left: 60%;
+            text-align: left;
+            max-width: 300px; /* Adjust the width as needed */
+            padding: 10px;
+        }
+
+        ol {
+            padding-left: 20px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="800" height="600" onclick="addPoint(event)"></canvas>
+    <button onclick="calculateConvexHull()">Calculate Convex Hull</button>
+    <button onclick="clearCanvas()">Clear Canvas</button>
+    <div id="complexities">
+        <p>Space Complexity(h): <span id="spaceComplexity">-</span></p>
+        <p>Time Complexity(nh): <span id="timeComplexity">-</span></p>
+    </div>
+    <!-- Add this element inside the <body> tag, preferably below the complexities section -->
+    <div id="steps">
+        <h2>Convex Hull Calculation Steps(Jarvis March)</h2>
+        <ol id="stepList"></ol>
+    </div>
+
+    <script>
+        var canvas = document.getElementById('myCanvas');
+        var ctx = canvas.getContext('2d');
+        var userPoints = [];
+
+        class Point {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+        }
+
+        function addPoint(event) {
+            var x = event.clientX - canvas.getBoundingClientRect().left;
+            var y = event.clientY - canvas.getBoundingClientRect().top;
+
+            userPoints.push(new Point(x, y));
+            visualize();
+        }
+
+        function visualize() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw user-input points
+            ctx.fillStyle = '#3498db';
+            for (var i = 0; i < userPoints.length; i++) {
+                ctx.beginPath();
+                ctx.arc(userPoints[i].x, userPoints[i].y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+
+        function calculateConvexHull() {
+            var startTime = performance.now();
+            var convexHull = jarvisConvexHull(userPoints);
+            var endTime = performance.now();
+            var spaceComplexity = convexHull.length;
+
+            document.getElementById('spaceComplexity').innerText = spaceComplexity;
+            document.getElementById('timeComplexity').innerText = (endTime - startTime).toFixed(2) + " ms";
+
+            visualizeConvexHullWithDelay(convexHull, 1000);
+        }
+
+        function visualizeConvexHullWithDelay(convexHull, delay) {
+            // Clear previous steps
+            document.getElementById('stepList').innerHTML = '';
+
+            // Visualize Convex Hull on the canvas with a delay between steps
+            ctx.strokeStyle = '#e74c3c'; // Red
+            ctx.lineWidth = 2;
+
+            for (var i = 0; i < convexHull.length; i++) {
+                setTimeout(drawConvexHullStep, delay * i, convexHull, i);
+                addStepToList(i, convexHull[i]); // Add step to the list
+            }
+        }
+
+        function addStepToList(stepNumber, point) {
+            var stepList = document.getElementById('stepList');
+            var listItem = document.createElement('li');
+            listItem.innerText = `Step ${stepNumber + 1}: (${point.x}, ${point.y})`;
+            stepList.appendChild(listItem);
+        }
+
+        function drawConvexHullStep(convexHull, step) {
+            var nextIndex = (step + 1) % convexHull.length;
+
+            // Draw the dotted line to all other points
+            for (var i = 0; i < convexHull.length; i++) {
+                if (i !== step) {
+                    drawDottedLine(convexHull[step], convexHull[i]);
+                }
+            }
+
+            // Draw the current point being considered
+            ctx.fillStyle = '#e74c3c'; // Red
+            ctx.beginPath();
+            ctx.arc(convexHull[step].x, convexHull[step].y, 5, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Highlight the point included in the convex hull
+            ctx.fillStyle = '#2ecc71'; // Green
+            ctx.beginPath();
+            ctx.arc(convexHull[nextIndex].x, convexHull[nextIndex].y, 5, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Draw the final convex hull line with bold style only on the last step
+            if (step === convexHull.length - 1) {
+                ctx.strokeStyle = '#e74c3c'; // Red
+                ctx.lineWidth = 4;
+                for (var i = 0; i < convexHull.length; i++) {
+                    var nextIndex = (i + 1) % convexHull.length;
+                    ctx.beginPath();
+                    ctx.moveTo(convexHull[i].x, convexHull[i].y);
+                    ctx.lineTo(convexHull[nextIndex].x, convexHull[nextIndex].y);
+                    ctx.stroke();
+                }
+                // Reset the line style
+                ctx.lineWidth = 2;
+            }
+        }
+
+        function clearVisualization() {
+            visualize();
+        }
+
+        function drawDottedLine(p1, p2) {
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function jarvisConvexHull(points) {
+            var n = points.length;
+
+            if (n < 3) {
+                // Convex hull is not possible with less than 3 points
+                return [];
+            }
+
+            // Find the point with the largest y-coordinate as the starting point of the convex hull
+            var startPoint = getSmallestAnglePoint(points);
+            var convexHull = [startPoint];
+
+            do {
+                // Initialize the next point in the convex hull
+                var nextPoint = points[0];
+
+                // Iterate through all points to find the next point in the convex hull
+                for (var i = 1; i < n; i++) {
+                    if (points[i] === convexHull[convexHull.length - 1]) {
+                        continue;
+                    }
+
+                    var orientation = getOrientation(convexHull[convexHull.length - 1], nextPoint, points[i]);
+
+                    if (nextPoint === convexHull[convexHull.length - 1] ||
+                        orientation === 2 ||
+                        (orientation === 0 && distanceSquared(convexHull[convexHull.length - 1], points[i]) > distanceSquared(convexHull[convexHull.length - 1], nextPoint))) {
+                        nextPoint = points[i];
+                    }
+                }
+
+                // Add the next point to the convex hull
+                convexHull.push(nextPoint);
+
+            } while (convexHull[0] !== convexHull[convexHull.length - 1]); // Continue until we reach the starting point
+
+            // Remove the duplicate starting point
+            convexHull.pop();
+
+            return convexHull;
+        }
+
+        function getSmallestAnglePoint(points) {
+            var startPoint = points[0];
+
+            for (var i = 1; i < points.length; i++) {
+                if (points[i].y > startPoint.y || (points[i].y === startPoint.y && points[i].x < startPoint.x)) {
+                    startPoint = points[i];
+                }
+            }
+
+            return startPoint;
+        }
+
+        function getOrientation(p, q, r) {
+            var val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+            if (val === 0) return 0; // collinear
+            return (val > 0) ? 1 : 2; // clockwise or counterclockwise
+        }
+
+        function distanceSquared(p1, p2) {
+            return Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2);
+        }
+
+        function clearCanvas() {
+            userPoints = [];
+            visualize();
+        }
+    </script>
+</body>
+
+</html>

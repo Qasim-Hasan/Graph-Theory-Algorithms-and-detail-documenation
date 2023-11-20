@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <title>Algorithm Project</title>
+</head>
+<body>
+
+    <!-- Section 1: Welcome Section with Video Background -->
+    <section class="welcome-section">
+        <video autoplay loop muted playsinline class="video-bg">
+            <source src="./video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="welcome-content">
+            <h1 class="large-text">Welcome to Our Algorithm Project</h1>
+            <p>Explore the fascinating world of algorithms with us.</p>
+        </div>
+    </section>
+
+    <!-- Section 2: Algorithm Cards Section -->
+    <section class="algorithm-cards">
+        <div class="heading" style="display: block;width: 100%;">
+            <h2>Design and Analysis of Algorithms Project</h2>
+        </div>
+        <div class="card" onclick="window.location.href='lines.html'">
+            <h2>Lines Intersection</h2>
+            <p>Orientation Based Approach</p>
+            <p>Cross Product Approach</p>
+            <p>ParametricApproach</p>
+        </div>
+        <div class="card" onclick="window.location.href='grahamScan.html'">
+            <h2>Graham Scan</h2>
+            <p>- Time Complexity: O(n log n)</p>
+            <p>- Space Complexity: O(n)</p>
+        </div>
+        <!-- Repeat similar card structures for other algorithms -->
+        <!-- Example card for Algorithm 3 -->
+        <div class="card" onclick="window.location.href='monotoneChain.html'">
+            <h2>Monotone Chain</h2>
+            <p>- Time Complexity: O(n log n)</p>
+            <p>- Space Complexity: O(n)</p>
+        </div>
+        <!-- Example card for Algorithm 4 -->
+        <div class="card" onclick="window.location.href='jarvis.html'">
+            <h2>Jarvis March</h2>
+            <p>- Time Complexity: O(nh), where h is the number of vertices on the convex hull</p>
+            <p>- Space Complexity: O(1)</p>
+        </div>
+        <!-- Example card for Algorithm 5 -->
+        <div class="card" onclick="window.location.href='quickHull.html'">
+            <h2>Quick Elimination</h2>
+            <p>- Time Complexity: O(n log n) on average, but can degrade to O(n<sup>2</sup>)) in the worst case</p>
+            <p>- Space Complexity: O(n)</p>
+        </div>
+        <!-- Example card for Algorithm 6 -->
+        <div class="card" onclick="window.location.href='bruteForce.html'">
+            <h2>Brute Force</h2>
+            <p>- Time Complexity: O(n<sup>3</sup>) in the worst case (using rotating calipers method)</p>
+            <p>- Space Complexity: O(1)</p>
+        </div>
+    </section>
+
+    <!-- Section 3: Team Members Section -->
+    <section class="team-members">
+        <div class="heading" style="display: block;width: 100%;">
+            <h2>Team Members</h2>
+        </div>
+        
+        <div class="team-card">
+            <img src="./talha.jpeg" alt="Team Member 1">
+            <h3>Muhammad Talha Shaikh</h3>
+            <p>21K-4564</p>
+        </div>
+        <!-- Repeat similar card structures for other team members -->
+        <!-- Example card for Member 2 -->
+        <div class="team-card">
+            <img src="./hamza.jpeg" alt="Team Member 2">
+            <h3>Muhammad Hamza</h3>
+            <p>21K-3293</p>
+        </div>
+        <!-- Example card for Member 3 -->
+        <div class="team-card">
+            <img src="./qasim.jpeg" alt="Team Member 3">
+            <h3>Qasim Hasan</h3>
+            <p>21K-3210</p>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
